@@ -7,22 +7,24 @@ const WinJS = require('winjs')
 function reload() {
   location.reload();
 }
+
 function setAsWallpaper(file) {
-  console.log('will set '+file+' as wallpaper');
-  ipcRenderer.send('changeDesktopWallpaper',  file);
+  console.log('will set ' + file + ' as wallpaper');
+  ipcRenderer.send('changeDesktopWallpaper', file);
 }
 
 function showWallpaperBtn(div) {
-var wallpaperBtn = div.querySelector('button');
-wallpaperBtn.style.opacity = '1';
-wallpaperBtn.style.height = '50px';
+  var wallpaperBtn = div.querySelector('button');
+  wallpaperBtn.style.opacity = '1';
+  wallpaperBtn.style.height = '50px';
 }
 
 function hideWallpaperBtn(div) {
   var wallpaperBtn = div.querySelector('button');
   wallpaperBtn.style.height = '0px';
-  wallpaperBtn.style.opacity= '0';
+  wallpaperBtn.style.opacity = '0';
 }
+
 function refreshImages(imagesFolder, imgsFolderFiles) {
   var imgsHTML = '';
   if (imgsFolderFiles.length > 0) { // if images folder has files 
@@ -58,9 +60,9 @@ WinJS.UI.processAll().done(function () {
   new WinJS.UI._WinKeyboard(splitView.paneElement); // Temporary workaround: Draw keyboard focus visuals on NavBarCommands
 });
 
-document.getElementById('openFolderBtn').addEventListener('click', function(){
+document.getElementById('openFolderBtn').addEventListener('click', function () {
   ipcRenderer.send('openImagesFolder')
 })
-document.getElementById('aboutSoftwareBtn').addEventListener('click', function(){
+document.getElementById('aboutSoftwareBtn').addEventListener('click', function () {
   ipcRenderer.send('showAboutInfo')
 })

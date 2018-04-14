@@ -10,32 +10,28 @@ const {
 const path = require('path')
 const url = require('url')
 const fs = require('fs')
-const os = require('os')
-const Jimp = require('jimp')
+const os = require('os');
+const Jimp = require("jimp")
 const wallpaper = require('wallpaper')
 const AutoLaunch = require('auto-launch');
 
-
-// Start the app on start
 var appAutoLauncher = new AutoLaunch({
-    name: 'spotlight-image-saver',
+    name: 'spotlight-saver',
     isHidden: true,
 });
+
 appAutoLauncher.isEnabled()
-.then(function(isEnabled){
-  if(isEnabled){
-    return;
-  }
-appAutoLauncher.enable();
-})
-.catch(function(err){
-  console.log(err)
-});
+    .then(function (isEnabled) {
+        if (isEnabled) {
+            return;
+        }
+        appAutoLauncher.enable();
+    })
+    .catch(function (err) {
+        console.log(err)
+    });
 
-//gets the username of the os's logged in user
-var username = os.userInfo().username;
-
-// get spotlight images
+var username = os.userInfo().username; //gets the username of the os's logged in user
 var spotlightFolder = `C:/Users/${username}/AppData/Local/Packages/Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy/LocalState/Assets`;
 
 var appImgsFolder = createImagesFolder();
@@ -54,42 +50,63 @@ function createImagesFolder() {
     }
 }
 
+
 let win
 
-function createWindow() {
-    // Create the browser window and specify the dimentions
-    win = new BrowserWindow({
-        width: 800,
-        height: 600
-    })
-    // and load the index.html of the app.
-    win.loadURL(url.format({
-        //here's where we load the index.html file
-        pathname: path.join(__dirname, './src/index.html'),
-        protocol: 'file:',
-        slashes: true
-    }))
-    // Open the DevTools.
-    win.webContents.openDevTools()
-    // Emitted when the window is closed.
-    win.on('closed', () => {
-        win = null
-    })
-    //removes default main menu for the app
-    Menu.setApplicationMenu(null);
-    updateImagesFolder(appImgsFolder, spotlightFolder)
-    win.webContents.on('did-finish-load', () => {
-        //fetch filenames in the images folder after it has been updated
-        var imgsFolderFiles = fs.readdirSync(appImgsFolder);
-        //payload defines the message we send to the ui window
-        var payload = {
-            imgsFolder: appImgsFolder,
-            imgsFolderFiles: imgsFolderFiles
-        }
+var startupArgs = process.argv || [];
 
-        //msg sent as an event called 'refresh images' with the payload
-        win.webContents.send('refreshImages', payload);
-    })
+function createWindow() {
+
+    if (startupArgs.indexOf('--hidden') == -1) {
+        //this is a normal user-initiated startup
+        // Create the browser window.
+        win = new BrowserWindow({
+            width: 800,
+            height: 600
+        })
+
+        // and load the index.html of the app.
+        win.loadURL(url.format({
+            pathname: path.join(__dirname, './src/index.html'),
+            protocol: 'file:',
+            slashes: true
+        }))
+        // uncomment next line to Open the DevTools.
+        //win.webContents.openDevTools()
+        // Emitted when the window is closed.
+        win.on('closed', () => {
+            win = null
+        })
+        //removes default main menu for the app
+        Menu.setApplicationMenu(null);
+        updateImagesFolder(appImgsFolder, spotlightFolder)
+
+        win.webContents.on('did-finish-load', () => {
+            //get the filenames in the images folder after it has been updated above
+            var imgsFolderFiles = fs.readdirSync(appImgsFolder);
+            //payload defines a message we can send to the ui window
+            var payload = {
+                imgsFolder: appImgsFolder,
+                imgsFolderFiles: imgsFolderFiles
+            }
+            //the path to the images folder and the files inside it are sent
+            win.webContents.send('refreshImages', payload);
+        })
+    } else {
+        //auto-launcher started the app;
+        //this is a silent startup, notice we don't load any url here
+        console.log('App is started by AutoLaunch');
+        const iconName = 'app-icon.png'; //<--remember to add an icon with this name in you apps root directory
+        const iconPath = path.join(__dirname, iconName)
+        appIcon = new Tray(iconPath)
+        appIcon.setToolTip(`Getting Windows Spotlight Images. This won't take long :)`)
+        updateImagesFolder(appImgsFolder, spotlightFolder)
+            .then(setTimeout(function () {
+                app.quit();
+            }, 10000))
+
+    }
+
 }
 app.on('ready', createWindow)
 // Quit when all windows are closed.
@@ -103,35 +120,32 @@ app.on('activate', () => {
     }
 })
 
-function updateImagesFolder(appImgsFolder, spotlightFolder) {
-    //below vars store an array of filenames from the respective folders
+async function updateImagesFolder(appImgsFolder, spotlightFolder) {
+    //below vars store an array of filenames in the respective folders
     var spotlightFolderFiles = fs.readdirSync(spotlightFolder);
     var imgsFolderFiles = fs.readdirSync(appImgsFolder);
 
     var promises = []; //will store an array of promises for a Promise.all func
     spotlightFolderFiles.forEach(file => {
-        //loop throught each filename and pass it to a promise func that determains if it is an image or not using Jimp
-        //the promise funcs are stored in the promises array
         promises.push(readAnonymFile(`${spotlightFolder}/${file}`))
     })
-    //promise all executes all the promises and gives out an array of their results
-    Promise.all(promises)
+
+    await Promise.all(promises)
         .then(results => {
-            //results is an array with both non-image files marked with "status: 'reject'" and image files marked "status: 'resolve'"
-            //images filters and gets results for only image files... however even icons are img files
+            //results is an array with both non image files marked with status 'reject' and image files
+            //images filters results for only image files... however even icons are img files
             var images = results.filter(result => result.status === 'resolve')
-            //loop through each of the image files
+
             images.forEach(imgFile => {
-                let filename = imgFile.file; //get filename
-                let imgObj = imgFile.image; //get Jimp image object which has special img processing funcs
-                let w = imgObj.bitmap.width; // the width of the image from Jimp obj
-                let h = imgObj.bitmap.height; //height of image from jimp obj
-                //check if image is rectangular and width is big enuf to be wallpaper && is not already in the imgs folder
+                let filename = imgFile.file;
+                let imgObj = imgFile.image;
+                let w = imgObj.bitmap.width; // the width of the image 
+                let h = imgObj.bitmap.height; //height of image
+                //check if image is rectangular and width is big enuf to be wallpaper
                 if (h < w && w > 1000 && imgsFolderFiles.indexOf(`${filename}.jpg`) == -1) {
-                    //Jimp imgObj has built in capability for saving a file in a directory using .write func
                     imgObj.write(`${appImgsFolder}/${filename}.jpg`, function () {
-                        // save file to app images folder and log if successfull
-                        console.log('found an wallpaper img')
+                        // save file to images folder and log if successfull
+                        console.log('found a wallpaper image')
                     });
                 }
             })
@@ -145,17 +159,15 @@ function updateImagesFolder(appImgsFolder, spotlightFolder) {
 
 function readAnonymFile(imagePath) {
     return new Promise((resolve, reject) => {
-        var filename = path.basename(imagePath); //gets the filename portion from a path
+        var filename = path.basename(imagePath);
         Jimp.read(imagePath, function (err, img) {
             if (err) {
-                //jimp was not able to read the file so it's not an img file, mark with 'status: "reject"'
                 resolve({
                     error: 'file is not an img.',
                     file: filename,
                     status: 'reject'
                 })
             } else if (img) {
-                //Jimp read the file and made an img object which has "superpowers" e.g. has .bitmap class and .write() function 
                 resolve({
                     image: img,
                     file: filename,
@@ -169,6 +181,28 @@ function readAnonymFile(imagePath) {
 
     })
 }
-ipcMain.on('changeDesktopWallpaper',(event, imgPath) => {
+
+ipcMain.on('changeDesktopWallpaper', (event, imgPath) => {
     wallpaper.set(imgPath)
+})
+
+ipcMain.on('openImagesFolder', event => {
+    shell.openItem(appImgsFolder);
+})
+
+ipcMain.on('showAboutInfo', event => {
+    const options = {
+        type: 'info',
+        title: 'Windows Lockscreen Image Saver',
+        message: 'About Software',
+        detail: `
+                App Version   :   1.0.0
+                Developed by  :   Lewis Munyi
+                https://lewis-munyi.github.io
+                https://github.com/lewis-munyi
+                https://twitter.com/lewismunyi
+`,
+        buttons: ['OK']
+    }
+    dialog.showMessageBox(options);
 })
