@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +9,6 @@
     <link rel="stylesheet" href="./css/style.css" />
     <link rel="stylesheet" href="../node_modules/winjs/css/ui-dark.css">
 </head>
-
 <body>
     <div id="app">
         <div class="splitView" data-win-control="WinJS.UI.SplitView">
@@ -20,14 +18,12 @@
                     <button class="win-splitviewpanetoggle" data-win-control="WinJS.UI.SplitViewPaneToggle" data-win-options="{ splitView: select('.splitView') }"></button>
                     <div class="title center">Menu</div>
                 </div>
-
                 <div class="nav-commands">
                     <div id="openFolderBtn" data-win-control="WinJS.UI.NavBarCommand" data-win-options="{ label: 'Open images folder', icon: 'folder'}"></div>
-                    <div id="aboutSoftwareBtn" data-win-control="WinJS.UI.NavBarCommand" data-win-options="{ label: 'About Software', icon: 'library'}"></div>
-                    <div id="reload" data-win-control="WinJS.UI.NavBarCommand" data-win-options="{ label: 'Reload', icon: 'settings'}" onclick="reload()"></div>
+                    <div id="aboutSoftwareBtn" data-win-control="WinJS.UI.NavBarCommand" data-win-options="{ label: 'About app', icon: 'help'}"></div>
+                    <div id="reload" data-win-control="WinJS.UI.NavBarCommand" data-win-options="{ label: 'Reload', icon: 'refresh'}" onclick="reload()"></div>
                 </div>
             </div>
-
             <!-- Content area -->
             <div id="imgs-area">
                 <div class="center msg" id="msg-area"> loading... </div>
