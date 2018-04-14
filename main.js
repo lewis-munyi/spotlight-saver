@@ -12,6 +12,26 @@ const url = require('url')
 const fs = require('fs')
 const os = require('os')
 const Jimp = require('jimp')
+const wallpaper = require('wallpaper')
+const AutoLaunch = require('auto-launch');
+
+
+// Start the app on start
+var appAutoLauncher = new AutoLaunch({
+    name: 'spotlight-image-saver',
+    isHidden: true,
+});
+appAutoLauncher.isEnabled()
+.then(function(isEnabled){
+  if(isEnabled){
+    return;
+  }
+appAutoLauncher.enable();
+})
+.catch(function(err){
+  console.log(err)
+});
+
 //gets the username of the os's logged in user
 var username = os.userInfo().username;
 
@@ -58,7 +78,18 @@ function createWindow() {
     //removes default main menu for the app
     Menu.setApplicationMenu(null);
     updateImagesFolder(appImgsFolder, spotlightFolder)
-    
+    win.webContents.on('did-finish-load', () => {
+        //fetch filenames in the images folder after it has been updated
+        var imgsFolderFiles = fs.readdirSync(appImgsFolder);
+        //payload defines the message we send to the ui window
+        var payload = {
+            imgsFolder: appImgsFolder,
+            imgsFolderFiles: imgsFolderFiles
+        }
+
+        //msg sent as an event called 'refresh images' with the payload
+        win.webContents.send('refreshImages', payload);
+    })
 }
 app.on('ready', createWindow)
 // Quit when all windows are closed.
@@ -138,3 +169,6 @@ function readAnonymFile(imagePath) {
 
     })
 }
+ipcMain.on('changeDesktopWallpaper',(event, imgPath) => {
+    wallpaper.set(imgPath)
+})
