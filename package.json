@@ -1,0 +1,26 @@
+{
+  "name": "spotlight-saver",
+  "version": "1.0.0",
+  "description": "an electron app to save the beautiful windows spotlight images before they disappear",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lewis-munyi/spotlight-saver.git"
+  },
+  "keywords": [
+    "electron",
+    "windows",
+    "node",
+    "winjs",
+    "windows-spotlight"
+  ],
+  "author": "Lewis Munyi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lewis-munyi/spotlight-saver/issues"
+  },
+  "homepage": "https://github.com/lewis-munyi/spotlight-saver#readme"
+}
