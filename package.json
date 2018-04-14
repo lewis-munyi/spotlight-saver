@@ -2,7 +2,7 @@
   "name": "spotlight-saver",
   "version": "1.0.0",
   "description": "an electron app to save the beautiful windows spotlight images before they disappear",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "start": "electron"
   },
@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/lewis-munyi/spotlight-saver/issues"
   },
-  "homepage": "https://github.com/lewis-munyi/spotlight-saver#readme"
+  "homepage": "https://github.com/lewis-munyi/spotlight-saver#readme",
+  "devDependencies": {
+    "electron": "^1.8.4"
+  }
 }
